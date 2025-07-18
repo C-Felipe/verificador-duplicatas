@@ -6,195 +6,172 @@
 
 #define MAX_EMAIL_LEN 51
 #define HASH_TABLE_SIZE 10007
-#define MAX_EMAILS 10000
 
 typedef struct Node {
     char email[MAX_EMAIL_LEN];
     struct Node* next;
 } Node;
 
-typedef struct {
-    Node* buckets[HASH_TABLE_SIZE];
-} HashTable;
+Node* hashTable[HASH_TABLE_SIZE];
 
-typedef struct {
-    char emails[MAX_EMAILS][MAX_EMAIL_LEN];
-    int count;
-} EmailList;
-
-unsigned long hash(const char* str) {
+int hash(const char* str) {
     unsigned long hash = 5381;
     int c;
-    while ((c = tolower(*str++)))
-        hash = ((hash << 5) + hash) + c;
+    while ((c = *str++))
+        hash = ((hash << 5) + hash) + tolower(c);
     return hash % HASH_TABLE_SIZE;
 }
 
-void init_table(HashTable* table) {
-    for (int i = 0; i < HASH_TABLE_SIZE; i++)
-        table->buckets[i] = NULL;
+void to_lower_str(char* str) {
+    for (; *str; str++)
+        *str = tolower(*str);
 }
 
-int insert_hash(HashTable* table, const char* email) {
-    unsigned long index = hash(email);
-    Node* current = table->buckets[index];
+int is_valid_email(const char* email) {
+    int i;
+    for (i = 0; email[i]; i++) {
+        if (i >= MAX_EMAIL_LEN - 1) return 0;
+        if (!isalnum(email[i]) && email[i] != '-' && email[i] != '_' && email[i] != '@' && email[i] != '.')
+            return 0;
+    }
+    return strchr(email, '@') != NULL;
+}
+
+int search_hash(const char* email) {
+    int index = hash(email);
+    Node* current = hashTable[index];
     while (current) {
         if (strcmp(current->email, email) == 0)
-            return 0;
-        current = current->next;
-    }
-    Node* new_node = malloc(sizeof(Node));
-    if (!new_node) {
-        printf("Erro de memória!\n");
-        exit(1);
-    }
-    strcpy(new_node->email, email);
-    new_node->next = table->buckets[index];
-    table->buckets[index] = new_node;
-    return 1;
-}
-
-void init_list(EmailList* list) {
-    list->count = 0;
-}
-
-int exists_linear(EmailList* list, const char* email) {
-    for (int i = 0; i < list->count; i++) {
-        if (strcasecmp(list->emails[i], email) == 0)
             return 1;
+        current = current->next;
     }
     return 0;
 }
 
-int insert_linear(EmailList* list, const char* email) {
-    if (exists_linear(list, email))
-        return 0;
-    if (list->count >= MAX_EMAILS) {
-        printf("Limite de e-mails atingido!\n");
-        exit(1);
+void insert_hash(const char* email) {
+    int index = hash(email);
+    Node* newNode = malloc(sizeof(Node));
+    strcpy(newNode->email, email);
+    newNode->next = hashTable[index];
+    hashTable[index] = newNode;
+}
+
+int search_linear(char emails[][MAX_EMAIL_LEN], int count, const char* email) {
+    for (int i = 0; i < count; i++)
+        if (strcmp(emails[i], email) == 0)
+            return 1;
+    return 0;
+}
+
+void free_hash_table() {
+    for (int i = 0; i < HASH_TABLE_SIZE; i++) {
+        Node* current = hashTable[i];
+        while (current) {
+            Node* tmp = current;
+            current = current->next;
+            free(tmp);
+        }
+        hashTable[i] = NULL;
     }
-    strcpy(list->emails[list->count++], email);
-    return 1;
 }
 
-int is_valid_email_char(char c) {
-    return isalnum(c) || c == '.' || c == '-' || c == '_' || c == '@';
-}
-
-void to_lowercase(char* str) {
-    for (; *str; ++str)
-        *str = tolower(*str);
-}
-
-int load_emails_from_file(HashTable* table, EmailList* list, const char* filename) {
+void verificar_duplicatas_csv(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (!file) {
-        printf("Não foi possível abrir o arquivo '%s'\n", filename);
-        return 0;
+        printf("Erro ao abrir o arquivo: %s\n", filename);
+        return;
     }
 
-    char line[100];
-    int count = 0;
+    char line[128];
+    char emails[10000][MAX_EMAIL_LEN];
+    int emailCount = 0;
 
-    fgets(line, sizeof(line), file); // pula cabeçalho
+    fgets(line, sizeof(line), file); // Pula cabeçalho
+
+    printf("\n[Usando Tabela Hash]\n");
+    clock_t start_hash = clock();
+    rewind(file);
+    fgets(line, sizeof(line), file); // Pula cabeçalho novamente
 
     while (fgets(line, sizeof(line), file)) {
-        char* token = strtok(line, ",");
-        if (token) {
-            char email[MAX_EMAIL_LEN];
-            strncpy(email, token, MAX_EMAIL_LEN);
-            email[MAX_EMAIL_LEN - 1] = '\0';
-            to_lowercase(email);
+        char* token = strtok(line, ",\n\r");
+        if (!token) continue;
 
-            insert_hash(table, email);
-            insert_linear(list, email);
-            count++;
+        char email[MAX_EMAIL_LEN];
+        strncpy(email, token, MAX_EMAIL_LEN);
+        email[MAX_EMAIL_LEN - 1] = '\0';
+
+        to_lower_str(email);
+
+        if (!is_valid_email(email)) continue;
+
+        if (search_hash(email))
+            printf("%s => Já cadastrado\n", email);
+        else {
+            insert_hash(email);
+            printf("%s => Novo\n", email);
         }
     }
-
+    clock_t end_hash = clock();
+    double time_hash = (double)(end_hash - start_hash) / CLOCKS_PER_SEC;
     fclose(file);
-    return count;
+
+    file = fopen(filename, "r");
+    fgets(line, sizeof(line), file); // Pula cabeçalho novamente
+
+    printf("\n[Usando Busca Linear]\n");
+    clock_t start_linear = clock();
+    while (fgets(line, sizeof(line), file)) {
+        char* token = strtok(line, ",\n\r");
+        if (!token) continue;
+
+        char email[MAX_EMAIL_LEN];
+        strncpy(email, token, MAX_EMAIL_LEN);
+        email[MAX_EMAIL_LEN - 1] = '\0';
+
+        to_lower_str(email);
+
+        if (!is_valid_email(email)) continue;
+
+        if (search_linear(emails, emailCount, email))
+            printf("%s => Já cadastrado\n", email);
+        else {
+            strcpy(emails[emailCount++], email);
+            printf("%s => Novo\n", email);
+        }
+    }
+    clock_t end_linear = clock();
+    double time_linear = (double)(end_linear - start_linear) / CLOCKS_PER_SEC;
+    fclose(file);
+
+    printf("\nTempo Hash: %.4f segundos\n", time_hash);
+    printf("Tempo Linear: %.4f segundos\n", time_linear);
+
+    free_hash_table();
 }
 
 int main() {
-    HashTable table;
-    EmailList listLinear;
+    int opcao;
+    char filename[256];
 
-    init_table(&table);
-    init_list(&listLinear);
-
-    char filename[100];
-    char resposta[10];
-
-    printf("Deseja carregar uma lista de e-mails existente? (s/n): ");
-    fgets(resposta, sizeof(resposta), stdin);
-    resposta[strcspn(resposta, "\n")] = '\0';
-
-    if (tolower(resposta[0]) == 's') {
-        printf("Digite o nome ou caminho do arquivo CSV: ");
-        fgets(filename, sizeof(filename), stdin);
-        filename[strcspn(filename, "\n")] = '\0';
-
-        int carregados = load_emails_from_file(&table, &listLinear, filename);
-        printf("Carregados %d e-mails do arquivo '%s'.\n", carregados, filename);
-    } else {
-        printf("Iniciando com lista vazia.\n");
-    }
-
-    char email[MAX_EMAIL_LEN];
-    int totalEmails = listLinear.count;
-    int dupHash = 0, dupLinear = 0;
-
-    clock_t start_hash = clock();
-    clock_t start_linear = clock();
-
-    printf("\nDigite e-mails para inserir (Enter em branco para encerrar):\n");
     while (1) {
-        printf("Informe o e-mail: ");
-        if (!fgets(email, sizeof(email), stdin))
-            break;
-        email[strcspn(email, "\n")] = '\0';
-        if (strlen(email) == 0)
-            break;
+        printf("\n===== VERIFICADOR DE DUPLICATAS =====\n");
+        printf("1. Verificar duplicatas em lista CSV\n");
+        printf("0. Sair\n");
+        printf("Escolha uma opção: ");
+        scanf("%d", &opcao);
+        getchar();
 
-        int valid = 1;
-        for (int i = 0; email[i]; i++) {
-            if (!is_valid_email_char(email[i])) {
-                valid = 0;
-                break;
-            }
+        if (opcao == 0) break;
+        else if (opcao == 1) {
+            printf("Digite o caminho do arquivo CSV: ");
+            fgets(filename, sizeof(filename), stdin);
+            filename[strcspn(filename, "\n")] = '\0';
+            verificar_duplicatas_csv(filename);
+        } else {
+            printf("Opção inválida!\n");
         }
-        if (!valid) {
-            printf("E-mail inválido! Use apenas letras, números, '.', '-', '_' e '@'.\n\n");
-            continue;
-        }
-
-        to_lowercase(email);
-
-        int insertedHash = insert_hash(&table, email);
-        if (!insertedHash) dupHash++;
-
-        int insertedLinear = insert_linear(&listLinear, email);
-        if (!insertedLinear) dupLinear++;
-
-        totalEmails++;
-        printf("Status: %s (Hash) | %s (Linear)\n\n",
-               insertedHash ? "Novo" : "Duplicado",
-               insertedLinear ? "Novo" : "Duplicado");
     }
-
-    clock_t end_hash = clock();
-    clock_t end_linear = clock();
-
-    double time_hash = ((double)(end_hash - start_hash)) / CLOCKS_PER_SEC;
-    double time_linear = ((double)(end_linear - start_linear)) / CLOCKS_PER_SEC;
-
-    printf("Resumo final:\n");
-    printf("Total de e-mails processados: %d\n", totalEmails);
-    printf("Duplicatas encontradas (Hash): %d\n", dupHash);
-    printf("Duplicatas encontradas (Linear): %d\n", dupLinear);
-    printf("Tempo gasto (Hash): %.6f segundos\n", time_hash);
-    printf("Tempo gasto (Linear): %.6f segundos\n", time_linear);
 
     return 0;
 }
