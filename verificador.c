@@ -7,7 +7,7 @@
 #define MAX_EMAIL_LEN 51
 #define HASH_TABLE_SIZE 10007
 #define BLOOM_SIZE 125000  // 1 milhão de bits / 8 = 125000 bytes
-#define MAX_EMAILS 10000
+#define MAX_EMAILS 1000000
 
 typedef struct Node {
     char email[MAX_EMAIL_LEN];
@@ -220,14 +220,16 @@ void verificar_hash_carregado() {
 }
 
 void verificar_linear_carregado() {
-    char emails_linear[MAX_EMAILS][MAX_EMAIL_LEN];
+    char (*emails_linear)[MAX_EMAIL_LEN] = malloc(sizeof(char[MAX_EMAIL_LEN]) * total_emails);
+    if (!emails_linear) {
+        printf("Erro de memória ao alocar emails_linear\n");
+        return;
+    }
     int count = 0;
-
     clock_t start = clock();
 
     for (int i = 0; i < total_emails; i++) {
         const char* email = emails[i];
-
         if (search_linear(emails_linear, count, email))
             printf("%s => Já cadastrado\n", email);
         else {
@@ -235,10 +237,11 @@ void verificar_linear_carregado() {
             printf("%s => Novo\n", email);
         }
     }
-
     clock_t end = clock();
     tempo_linear = (double)(end - start) / CLOCKS_PER_SEC;
     printf("Tempo total (Busca Linear): %.4f segundos\n", tempo_linear);
+
+    free(emails_linear);
 }
 
 // Relatório de tempos (mantém igual)
