@@ -7,6 +7,7 @@
 #define MAX_EMAIL_LEN 51
 #define HASH_TABLE_SIZE 10007
 #define BLOOM_SIZE 125000  // 1 milhão de bits / 8 = 125000 bytes
+#define MAX_EMAILS 10000
 
 typedef struct Node {
     char email[MAX_EMAIL_LEN];
@@ -20,6 +21,10 @@ unsigned char bloom[BLOOM_SIZE];
 double tempo_bloom_hash = -1.0;
 double tempo_hash = -1.0;
 double tempo_linear = -1.0;
+
+// Emails carregados em memória
+char emails[MAX_EMAILS][MAX_EMAIL_LEN];
+int total_emails = 0;
 
 // Funções filtro de Bloom
 unsigned long djb2(const char* str) {
@@ -131,26 +136,44 @@ int search_linear(char emails[][MAX_EMAIL_LEN], int count, const char* email) {
     return 0;
 }
 
-// Verificações
-void verificar_bloom_hash(const char* filename) {
+// Função para carregar os emails do CSV apenas uma vez
+int carregar_emails(const char* filename) {
     FILE* file = fopen(filename, "r");
     if (!file) {
         printf("Erro ao abrir o arquivo: %s\n", filename);
-        return;
+        return 0;
     }
     char line[128];
-    fgets(line, sizeof(line), file); // cabeçalho
-
-    clock_t start = clock();
+    total_emails = 0;
+    fgets(line, sizeof(line), file); // Pula cabeçalho
 
     while (fgets(line, sizeof(line), file)) {
         char* token = strtok(line, ",\n\r");
         if (!token) continue;
-        char email[MAX_EMAIL_LEN];
-        strncpy(email, token, MAX_EMAIL_LEN);
-        email[MAX_EMAIL_LEN - 1] = '\0';
-        to_lower_str(email);
-        if (!is_valid_email(email)) continue;
+
+        strncpy(emails[total_emails], token, MAX_EMAIL_LEN);
+        emails[total_emails][MAX_EMAIL_LEN - 1] = '\0';
+
+        to_lower_str(emails[total_emails]);
+
+        if (is_valid_email(emails[total_emails])) {
+            total_emails++;
+            if (total_emails >= MAX_EMAILS) break;
+        }
+    }
+    fclose(file);
+    return 1;
+}
+
+// Versões adaptadas das funções de verificação que usam a lista carregada
+void verificar_bloom_hash_carregado() {
+    memset(bloom, 0, sizeof(bloom));
+    free_hash_table();
+
+    clock_t start = clock();
+
+    for (int i = 0; i < total_emails; i++) {
+        const char* email = emails[i];
 
         if (bloom_possibly_contains(email)) {
             if (search_hash(email))
@@ -165,33 +188,21 @@ void verificar_bloom_hash(const char* filename) {
             printf("%s => Novo\n", email);
         }
     }
+
     clock_t end = clock();
     tempo_bloom_hash = (double)(end - start) / CLOCKS_PER_SEC;
     printf("Tempo total (Bloom + Hash): %.4f segundos\n", tempo_bloom_hash);
-    fclose(file);
+
     free_hash_table();
-    memset(bloom, 0, sizeof(bloom));
 }
 
-void verificar_hash(const char* filename) {
-    FILE* file = fopen(filename, "r");
-    if (!file) {
-        printf("Erro ao abrir o arquivo: %s\n", filename);
-        return;
-    }
-    char line[128];
-    fgets(line, sizeof(line), file); // cabeçalho
+void verificar_hash_carregado() {
+    free_hash_table();
 
     clock_t start = clock();
 
-    while (fgets(line, sizeof(line), file)) {
-        char* token = strtok(line, ",\n\r");
-        if (!token) continue;
-        char email[MAX_EMAIL_LEN];
-        strncpy(email, token, MAX_EMAIL_LEN);
-        email[MAX_EMAIL_LEN - 1] = '\0';
-        to_lower_str(email);
-        if (!is_valid_email(email)) continue;
+    for (int i = 0; i < total_emails; i++) {
+        const char* email = emails[i];
 
         if (search_hash(email))
             printf("%s => Já cadastrado\n", email);
@@ -200,49 +211,37 @@ void verificar_hash(const char* filename) {
             printf("%s => Novo\n", email);
         }
     }
+
     clock_t end = clock();
     tempo_hash = (double)(end - start) / CLOCKS_PER_SEC;
     printf("Tempo total (Hash): %.4f segundos\n", tempo_hash);
-    fclose(file);
+
     free_hash_table();
 }
 
-void verificar_linear(const char* filename) {
-    FILE* file = fopen(filename, "r");
-    if (!file) {
-        printf("Erro ao abrir o arquivo: %s\n", filename);
-        return;
-    }
-    char line[128];
-    fgets(line, sizeof(line), file); // cabeçalho
-
-    char emails[10000][MAX_EMAIL_LEN];
+void verificar_linear_carregado() {
+    char emails_linear[MAX_EMAILS][MAX_EMAIL_LEN];
     int count = 0;
 
     clock_t start = clock();
 
-    while (fgets(line, sizeof(line), file)) {
-        char* token = strtok(line, ",\n\r");
-        if (!token) continue;
-        char email[MAX_EMAIL_LEN];
-        strncpy(email, token, MAX_EMAIL_LEN);
-        email[MAX_EMAIL_LEN - 1] = '\0';
-        to_lower_str(email);
-        if (!is_valid_email(email)) continue;
+    for (int i = 0; i < total_emails; i++) {
+        const char* email = emails[i];
 
-        if (search_linear(emails, count, email))
+        if (search_linear(emails_linear, count, email))
             printf("%s => Já cadastrado\n", email);
         else {
-            strcpy(emails[count++], email);
+            strcpy(emails_linear[count++], email);
             printf("%s => Novo\n", email);
         }
     }
+
     clock_t end = clock();
     tempo_linear = (double)(end - start) / CLOCKS_PER_SEC;
     printf("Tempo total (Busca Linear): %.4f segundos\n", tempo_linear);
-    fclose(file);
 }
 
+// Relatório de tempos (mantém igual)
 void mostrar_relatorio() {
     printf("\n===== RELATÓRIO DE TEMPOS =====\n");
     if (tempo_bloom_hash >= 0)
@@ -263,14 +262,14 @@ void mostrar_relatorio() {
     if (tempo_bloom_hash >= 0 && tempo_hash >= 0) {
         double diff = tempo_hash - tempo_bloom_hash;
         double perc = (diff / tempo_hash) * 100.0;
-        printf("Bloom + Hash é %.2f%% %s que Hash padrão\n", 
+        printf("Bloom + Hash é %.2f%% %s que Hash padrão\n",
             perc < 0 ? -perc : perc, perc < 0 ? "mais lento" : "mais rápido");
     }
 
     if (tempo_hash >= 0 && tempo_linear >= 0) {
         double diff = tempo_linear - tempo_hash;
         double perc = (diff / tempo_linear) * 100.0;
-        printf("Hash padrão é %.2f%% %s que Busca linear\n", 
+        printf("Hash padrão é %.2f%% %s que Busca linear\n",
             perc < 0 ? -perc : perc, perc < 0 ? "mais lento" : "mais rápido");
     }
 }
@@ -278,29 +277,51 @@ void mostrar_relatorio() {
 int main() {
     int opcao;
     char filename[256];
+    int lista_carregada = 0;
 
     while (1) {
         printf("\n===== VERIFICADOR DE DUPLICATAS =====\n");
-        printf("1. Verificar com Filtro Bloom + Hash\n");
-        printf("2. Verificar com Hash padrão\n");
-        printf("3. Verificar com Busca Linear\n");
-        printf("4. Mostrar relatório de tempos\n");
+        printf("1. Carregar lista CSV\n");
+        printf("2. Verificar com Filtro Bloom + Hash\n");
+        printf("3. Verificar com Hash padrão\n");
+        printf("4. Verificar com Busca Linear\n");
+        printf("5. Mostrar relatório de tempos\n");
         printf("0. Sair\n");
         printf("Escolha uma opção: ");
         scanf("%d", &opcao);
         getchar();
 
         if (opcao == 0) break;
-        else if (opcao >=1 && opcao <=3) {
+
+        if (opcao == 1) {
             printf("Digite o caminho do arquivo CSV: ");
             fgets(filename, sizeof(filename), stdin);
             filename[strcspn(filename, "\n")] = '\0';
 
-            if (opcao == 1) verificar_bloom_hash(filename);
-            else if (opcao == 2) verificar_hash(filename);
-            else if (opcao == 3) verificar_linear(filename);
+            if (carregar_emails(filename)) {
+                printf("Lista carregada com %d emails.\n", total_emails);
+                lista_carregada = 1;
+                // Zera tempos para nova lista
+                tempo_bloom_hash = tempo_hash = tempo_linear = -1.0;
+                free_hash_table();
+                memset(bloom, 0, sizeof(bloom));
+            } else {
+                printf("Falha ao carregar a lista.\n");
+            }
+        }
+        else if (!lista_carregada) {
+            printf("Por favor, carregue a lista CSV primeiro (opção 1).\n");
+        }
+        else if (opcao == 2) {
+            verificar_bloom_hash_carregado();
+        }
+        else if (opcao == 3) {
+            verificar_hash_carregado();
         }
         else if (opcao == 4) {
+            verificar_linear_carregado();
+        }
+        else if (opcao == 5) {
             mostrar_relatorio();
         }
         else {
