@@ -121,7 +121,12 @@ void verificar_linear_gui() {
     set_output_text("Iniciando verificação Busca Linear...\r\n");
     UpdateWindow(hwndOutput);
 
-    char emails_linear[MAX_EMAILS][MAX_EMAIL_LEN];
+    char (*emails_linear)[MAX_EMAIL_LEN] = malloc(sizeof(char[MAX_EMAIL_LEN]) * MAX_EMAILS);
+    if (!emails_linear) {
+    MessageBoxA(NULL, "Erro de memória ao alocar emails_linear.", "Erro", MB_OK | MB_ICONERROR);
+    return;
+    }
+
     int count = 0;
     int duplicatas = 0;
 
@@ -163,6 +168,9 @@ void verificar_linear_gui() {
         tempo_linear, total_emails, duplicatas);
 
     MessageBoxA(NULL, summary, "Resumo Busca Linear", MB_OK | MB_ICONINFORMATION);
+
+    free(emails_linear);
+
 }
 
 void mostrar_relatorio_gui() {
