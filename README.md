@@ -2,17 +2,22 @@
 
 ## Descrição do Projeto
 
-Este projeto consiste em um **verificador de duplicatas de emails**, desenvolvido em linguagem C, que implementa diferentes técnicas para a detecção eficiente de emails repetidos em grandes listas. O programa foi criado como trabalho para a disciplina **Estrutura de Dados II**, ministrada pelo professor **Kennedy Reurison Lopes**, e desenvolvido pelo aluno **Felipe Lopes**.
+Projeto desenvolvido como trabalho acadêmico para a disciplina **Estrutura de Dados II**, com as seguintes informações:
 
-O sistema utiliza três métodos principais para verificação de duplicatas:
+- **Disciplina:** Estrutura de Dados II  
+- **Professor:** [Dr. Kennedy Reurison Lopes](https://github.com/kennedyufersa)  
+- **Discente:** [Felipe Lopes](https://github.com/C-Felipe) 
 
-- **Filtro de Bloom + Tabela Hash**: Combina um filtro probabilístico para reduzir o número de buscas na tabela hash.
-- **Tabela Hash padrão**: Implementação tradicional de tabela hash com tratamento de colisão por encadeamento.
-- **Busca Linear**: Busca sequencial simples, usada para comparação de desempenho.
+Este sistema é um **verificador de duplicatas de emails** implementado em linguagem C, que utiliza três métodos principais para detecção eficiente de emails repetidos em grandes listas:
 
-O programa aceita arquivos CSV com listas de emails, realiza a verificação e exibe um relatório comparativo de tempos para cada método.
+- **Filtro de Bloom + Tabela Hash:** Combina um filtro probabilístico para reduzir o número de buscas na tabela hash.  
+- **Tabela Hash padrão:** Implementação tradicional de tabela hash com tratamento de colisão por encadeamento.  
+- **Busca Linear:** Busca sequencial simples, usada para comparação de desempenho.  
 
-Além disso, o sistema conta com uma **interface gráfica simples**, que permite ao usuário interagir com o programa por meio de um menu com opções como: carregar lista, verificar duplicatas e exibir relatório.
+O programa aceita arquivos CSV com listas de emails, realiza a verificação e gera um relatório comparativo dos tempos de execução para cada método.
+
+Além disso, o sistema dispõe de uma **interface gráfica simples**, permitindo ao usuário interagir por meio de um menu com opções para carregar lista, verificar duplicatas e exibir relatório.
+
 
 ---
 
