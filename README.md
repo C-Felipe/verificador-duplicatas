@@ -59,6 +59,22 @@ Além disso, o sistema dispõe de uma **interface gráfica simples**, permitindo ao
 
 ---
 
+## Atualizações Futuras
+
+O projeto possui potencial para expansão com novas funcionalidades que ampliam sua utilidade e aplicabilidade. Entre as melhorias planejadas para versões futuras, destacam-se:
+
+- **Geração de nova lista sem duplicatas**  
+  Implementar uma função que, após a verificação da lista carregada, permita gerar um novo arquivo CSV contendo apenas os emails únicos, eliminando automaticamente todas as entradas duplicadas.  
+  Essa funcionalidade será útil para a limpeza e padronização de grandes bases de dados.
+
+- **Mesclagem de duas listas CSV com remoção de duplicatas**  
+  Desenvolver uma rotina capaz de carregar e comparar dois arquivos CSV diferentes, unificando seus conteúdos em uma **terceira lista mesclada**, onde todas as duplicatas entre as listas serão automaticamente removidas.  
+  Essa função será especialmente útil para integração de bases de dados oriundas de diferentes fontes.
+
+Essas atualizações visam tornar o sistema mais robusto, flexível e aplicável a cenários reais de tratamento e deduplicação de dados.
+
+---
+
 ## Como Executar (Sem interface)
 
 1. Compile:
