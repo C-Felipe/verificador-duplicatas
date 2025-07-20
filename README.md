@@ -2,9 +2,8 @@
 
 ## Descrição do Projeto
 
-Projeto desenvolvido como trabalho acadêmico para a disciplina **Estrutura de Dados II**, com as seguintes informações:
-
-- **Disciplina:** Estrutura de Dados II  
+Projeto desenvolvido como trabalho acadêmico para a disciplina **Estrutura de Dados II**
+ 
 - **Professor:** [Dr. Kennedy Reurison Lopes](https://github.com/kennedyufersa)  
 - **Discente:** [Felipe Lopes](https://github.com/C-Felipe) 
 
