@@ -12,6 +12,8 @@ O sistema utiliza três métodos principais para verificação de duplicatas:
 
 O programa aceita arquivos CSV com listas de emails, realiza a verificação e exibe um relatório comparativo de tempos para cada método.
 
+Além disso, o sistema conta com uma **interface gráfica simples**, que permite ao usuário interagir com o programa por meio de um menu com opções como: carregar lista, verificar duplicatas e exibir relatório.
+
 ---
 
 ## Funcionalidades
@@ -23,6 +25,7 @@ O programa aceita arquivos CSV com listas de emails, realiza a verificação e exi
   - Hash padrão
   - Busca linear
 - Apresentação de relatório comparativo de tempos de execução.
+- Interface gráfica (menu interativo via `gui.c`)
 - Tratamento de colisões na tabela hash via lista encadeada.
 - Busca case-insensitive para garantir maior robustez na comparação de emails.
 - Limitação configurável da quantidade máxima de emails a serem processados.
@@ -48,14 +51,25 @@ O programa aceita arquivos CSV com listas de emails, realiza a verificação e exi
   - `verificar_hash_carregado()`: verifica duplicatas usando somente tabela hash.
   - `verificar_linear_carregado()`: verifica duplicatas usando busca linear.
   - `mostrar_relatorio()`: exibe relatório de tempos comparativos.
+  - `interface_usuario()`: exibe o menu interativo no terminal e trata as opções.
 
 ---
 
-## Como Executar
+## Como Executar (Sem interface)
 
 1. Compile:
    ```bash
    gcc verificador.c -o verificador
+
+2. Execute:
+   ```bash
+   ./verificador
+
+## Como Executar (Com interface)
+
+1. Compile:
+   ```bash
+   gcc gui.c verificador.c -o verificador.exe
 
 2. Execute:
    ```bash
