@@ -59,7 +59,7 @@ Além disso, o sistema conta com uma **interface gráfica simples**, que permite a
 
 1. Compile:
    ```bash
-   gcc verificador.c -o verificador
+   gcc main.c verificador.c -o verificador
 
 2. Execute:
    ```bash
@@ -69,7 +69,7 @@ Além disso, o sistema conta com uma **interface gráfica simples**, que permite a
 
 1. Compile:
    ```bash
-   gcc gui.c verificador.c -o verificador.exe
+   gcc gui.c verificador.c -o verificador.exe -mwindows
 
 2. Execute:
    ```bash
