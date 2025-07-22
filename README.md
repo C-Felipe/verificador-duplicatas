@@ -5,7 +5,7 @@
 Projeto desenvolvido como trabalho acadêmico para a disciplina **Estrutura de Dados II**
  
 - **Professor:** [Dr. Kennedy Reurison Lopes](https://github.com/kennedyufersa)  
-- **Discente:** [Felipe Lopes](https://github.com/C-Felipe) 
+- **Discentes:** [Felipe Lopes](https://github.com/C-Felipe) e [Felipe Andrade](https://github.com/radiofelipe) 
 
 Este sistema é um **verificador de duplicatas de emails** implementado em linguagem C, que utiliza três métodos principais para detecção eficiente de emails repetidos em grandes listas:
 
