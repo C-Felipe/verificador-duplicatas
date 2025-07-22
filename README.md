@@ -94,3 +94,21 @@ Essas atualizações visam tornar o sistema mais robusto, flexível e aplicável a c
 2. Execute:
    ```bash
    ./verificador
+   
+  ---
+
+## Download
+
+Baixe o programa aqui:  
+[Verificador de Duplicatas v1.0](https://github.com/C-Felipe/verificador-duplicatas/releases/download/v1.0/Verificador.rar)
+
+---
+
+## Tutorial de Uso
+
+1. Faça o download do arquivo ZIP acima.  
+2. Extraia o conteúdo do arquivo em uma pasta de sua preferência.  
+3. Execute o programa `verificador.exe` (Windows).  
+4. Siga as instruções na tela para carregar listas de e-mails via arquivo CSV.  
+5. O programa irá identificar e marcar os e-mails duplicados, gerando relatórios para análise.
+
