@@ -79,7 +79,7 @@ Essas atualizações visam tornar o sistema mais robusto, flexível e aplicável a c
 
 1. Compile:
    ```bash
-   gcc main.c verificador.c -o verificador
+   gcc src/main.c src/verificador.c -o verificador
 
 2. Execute:
    ```bash
@@ -89,7 +89,7 @@ Essas atualizações visam tornar o sistema mais robusto, flexível e aplicável a c
 
 1. Compile:
    ```bash
-   gcc gui.c verificador.c -o verificador.exe -mwindows
+   gcc src/gui.c src/verificador.c -o verificador.exe -mwindows
 
 2. Execute:
    ```bash
